@@ -1,6 +1,10 @@
 # 🛰️ SPU SATELLITE OPERATIONS CENTER (SOC)
 ระบบจำลองสถานีภาคพื้นดินเพื่อติดตามตำแหน่งและคำนวณความถี่ดาวเทียมแบบ Real-Time (Satellite Ground Station Tracking & Telemetry Simulator) พัฒนาขึ้นเพื่อจำลองการรับสัญญาณจากดาวเทียมวิทยุสมัครเล่นย่าน UHF ผ่านพิกัดสถานีภาคพื้นดิน
 
+🌐 **Live Demo:** [https://spu-satellite-ops.onrender.com/](https://spu-satellite-ops.onrender.com/)
+
+---
+
 ## 📡 วัตถุประสงค์ของโปรเจกต์ (Project Objectives)
 * **Real-Time Tracking Simulation:** จำลองการคำนวณตำแหน่งองศาดาวเทียม ได้แก่ มุมทิศ (Azimuth) และมุมเงย (Elevation) ของดาวเทียมเมื่อโคจรผ่านสถานี
 * **Doppler Shift Calculation:** คำนวณความถี่วิทยุที่เปลี่ยนแปลงไป (Doppler Effect) ตามความเร็วและทิศทางของดาวเทียม เพื่อระบุความถี่จริงที่สถานีภาคพื้นดินต้องใช้ในการรับสัญญาณ
@@ -40,9 +44,3 @@
 
 ---
 
-## 🛠️ วิธีการติดตั้งและรันระบบ (Installation & Setup)
-
-1. **Clone Repository:**
-   ```bash
-   git clone <ลิงก์รีโพสิทอรีของคุณ>
-   cd <ชื่อโฟลเดอร์โปรเจกต์>
