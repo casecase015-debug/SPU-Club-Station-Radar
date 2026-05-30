@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,194 +7,49 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="header">
-        <div>
-            <h1>SPU SATELLITE OPERATIONS CENTER</h1>
-            <div class="status">SYSTEM ONLINE - TRACKING ACTIVE</div>
-        </div>
-        <div id="liveClock" class="clock">00:00:00 ICT</div>
-    </header>
-
-    <main class="dashboard">
+    <div class="container">
         <div class="left-panel">
-            <section class="radar-container">
+            <header>
+                <h1>SPU SATELLITE OPERATIONS CENTER</h1>
+                <p class="status">SYSTEM ONLINE - TRACKING ACTIVE</p>
+            </header>
+            
+            <div class="radar-box">
                 <canvas id="radarCanvas" width="500" height="500"></canvas>
-                <div class="radar-overlay">POLAR TRACKING (AZ/EL)</div>
-            </section>
+                <div class="radar-label">POLAR TRACKING (AZ/EL)</div>
+            </div>
 
-            <section class="comms-container">
-                <h2>COMM FREQUENCIES (CENTER)</h2>
-                <div class="freq-grid">
-                    <div class="freq-group">
-                        <span class="freq-sat">ISS</span>
-                        <div class="freq-row"><span class="freq-label">V-Voice RX:</span><span class="freq-value">145.800 MHz</span></div>
-                        <div class="freq-row"><span class="freq-label">U-Rep TX:</span><span class="freq-value">437.800 MHz</span></div>
-                    </div>
-                    <div class="freq-group">
-                        <span class="freq-sat">SO-50</span>
-                        <div class="freq-row"><span class="freq-label">U-Downlink:</span><span class="freq-value">436.795 MHz</span></div>
-                    </div>
-                    <div class="freq-group">
-                        <span class="freq-sat">IO-86</span>
-                        <div class="freq-row"><span class="freq-label">U-Downlink:</span><span class="freq-value">435.880 MHz</span></div>
-                    </div>
-                </div>
-            </section>
+            <div class="freq-box">
+                <h3>COMM FREQUENCIES (CENTER)</h3>
+                <div id="freqData"></div>
+            </div>
         </div>
 
-        <section class="telemetry-container">
-            <h2>LIVE TELEMETRY & DOPPLER SHIFT</h2>
-            <div class="table-header">
-                <span>SAT</span>
-                <span>AZ</span>
-                <span>EL</span>
-                <span>RANGE</span>
-                <span>DOPPLER RX</span>
-                <span>STATUS</span>
+        <div class="right-panel">
+            <div class="clock-box">
+                <div id="liveClock">00:00:00 ICT</div>
             </div>
-            <div id="telemetryData" class="telemetry-data">
-                <div class="loading">AWAITING SIGNAL...</div>
-            </div>
-        </section>
-    </main>
 
-   <footer>
+            <div class="telemetry-box">
+                <h3>LIVE TELEMETRY & DOPPLER SHIFT</h3>
+                <div class="table-header">
+                    <span>SAT</span>
+                    <span>AZ</span>
+                    <span>EL</span>
+                    <span>RANGE</span>
+                    <span>DOPPLER RX</span>
+                    <span>STATUS</span>
+                </div>
+                <div id="telemetryData">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
         <p>© 2026 SPU SATELLITE OPERATIONS CENTER. All Rights Reserved. | SYSTEM DEV: E25YMZ</p>
     </footer>
 
     <script src="script.js"></script>
 </body>
 </html>
-
-#### 2. Updated `frontend/script.js`
-```javascript
-const canvas = document.getElementById('radarCanvas');
-const ctx = canvas.getContext('2d');
-const telemetryDiv = document.getElementById('telemetryData');
-const clockDiv = document.getElementById('liveClock');
-
-const width = canvas.width;
-const height = canvas.height;
-const cx = width / 2;
-const cy = height / 2;
-const maxRadius = 240;
-
-let angle = 0;
-let satellites = [];
-let prevRanges = {};
-
-// SATELLITE CENTER FREQUENCIES (MHz)
-const CENTERS = {
-    "ISS": 437.800,
-    "SO-50": 436.795,
-    "IO-86": 435.880
-};
-
-function updateClock() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    clockDiv.textContent = `${hours}:${minutes}:${seconds} ICT`;
-}
-
-function drawRadarBackground() {
-    ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
-    ctx.lineWidth = 1;
-    for (let i = 1; i <= 3; i++) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, maxRadius * (i / 3), 0, Math.PI * 2);
-        ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius);
-    ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy);
-    ctx.stroke();
-}
-
-function drawSweep() {
-    ctx.fillStyle = 'rgba(1, 11, 1, 0.08)';
-    ctx.fillRect(0, 0, width, height);
-    drawRadarBackground();
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-    ctx.beginPath();
-    ctx.moveTo(0, 0); ctx.lineTo(0, -maxRadius);
-    ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2; ctx.stroke();
-    const gradient = ctx.createLinearGradient(0, 0, maxRadius, 0);
-    gradient.addColorStop(0, 'rgba(0, 255, 0, 0.5)'); gradient.addColorStop(1, 'rgba(0, 255, 0, 0)');
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, maxRadius, -Math.PI/2, -Math.PI/2 + 0.5);
-    ctx.lineTo(0, 0); ctx.fillStyle = gradient; ctx.fill();
-    ctx.restore();
-    angle += 0.05;
-}
-
-function drawSatellites() {
-    satellites.forEach(sat => {
-        if (sat.elevation > 0) {
-            const r = maxRadius * ((90 - sat.elevation) / 90);
-            const theta = (sat.azimuth - 90) * (Math.PI / 180);
-            const x = cx + r * Math.cos(theta); const y = cy + r * Math.sin(theta);
-            ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fillStyle = '#ffff00'; ctx.fill();
-            ctx.fillStyle = '#00ff00'; ctx.font = '12px Courier New'; ctx.fillText(sat.name, x + 8, y + 4);
-        }
-    });
-}
-
-function animate() {
-    drawSweep();
-    drawSatellites();
-    requestAnimationFrame(animate);
-}
-
-function calculateDopplerFreq(name, el, currentRange) {
-    const center = CENTERS[name] || 430.000;
-    const prevRange = prevRanges[name] || currentRange;
-    const isApproaching = currentRange < prevRange;
-    
-    let shift = 0; // in kHz
-    if (isApproaching) {
-        if (el < 45) shift = 10;
-        else if (el < 60) shift = 5;
-        else shift = 0;
-    } else { // Receding
-        if (el > 45) shift = -5;
-        else shift = -10;
-    }
-    
-    prevRanges[name] = currentRange;
-    return (center + (shift / 1000)).toFixed(3);
-}
-
-async function fetchTelemetry() {
-    try {
-        const response = await fetch('/api/satellites');
-        satellites = await response.json();
-        telemetryDiv.innerHTML = '';
-        satellites.forEach(sat => {
-            const isVisible = sat.elevation > 0;
-            const dopplerFreq = isVisible ? calculateDopplerFreq(sat.name, sat.elevation, sat.range_km) : "---.---";
-            const row = document.createElement('div');
-            row.className = `sat-row ${isVisible ? 'alert' : 'danger'}`;
-            row.style.display = 'grid';
-            row.style.gridTemplateColumns = '1.5fr 1fr 1fr 1fr 1.2fr 1fr';
-            row.innerHTML = `
-                <span>${sat.name}</span>
-                <span>${sat.azimuth.toFixed(1)}°</span>
-                <span>${sat.elevation.toFixed(1)}°</span>
-                <span>${sat.range_km.toFixed(0)}km</span>
-                <span style="color:#00ffff; font-weight:bold">${dopplerFreq}</span>
-                <span>${isVisible ? 'AOS' : 'LOS'}</span>
-            `;
-            telemetryDiv.appendChild(row);
-        });
-    } catch (e) { console.error(e); }
-}
-
-animate();
-setInterval(updateClock, 1000);
-setInterval(fetchTelemetry, 1000);
-updateClock(); fetchTelemetry();
-
-Everything is set for your mission control. Feel free to explore the slides and let me know if you need any more tactical adjustments!
