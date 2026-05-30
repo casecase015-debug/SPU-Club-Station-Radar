@@ -11,8 +11,16 @@ const cx = canvas.width / 2;
 const cy = canvas.height / 2;
 const maxRadius = 220;
 let angle = 0;
-let satellites = [];
-
+// เปลี่ยนจาก let satellites = []; ด้านบนสุด ให้มีข้อมูลเริ่มต้นดังนี้ครับ:
+let satellites = [
+    {
+        name: "ISS (ZARYA)",
+        azimuth: 185.2,
+        elevation: 45.1,
+        range_km: 652,
+        doppler_khz: 4.2
+    }
+];
 // วาดสเกลเรดาร์เชิงมุม (เส้นตรรกศาสตร์ 15° - 330°)
 function drawRadarGrid() {
     ctx.strokeStyle = '#003300';
