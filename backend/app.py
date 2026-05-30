@@ -11,35 +11,20 @@ config_path = os.path.join(data_dir, 'satellites.json')
 import os
 from flask import Flask, jsonify, send_from_directory
 
-# ชี้ไปที่โฟลเดอร์ frontend โดยตรง ไม่ต้องมีจุดถอยหลัง
-app = Flask(__name__, static_folder='frontend', static_url_path='')
+# 1. แก้ไขบรรทัดนี้: ให้ดึงไฟล์จากโฟลเดอร์ frontend โดยตรง
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
 
-# ปล่อยให้มี @app.route('/') และ def index(): แค่ชุดเดียวในไฟล์นะครับ!
+# 2. เพิ่ม Route ตัวนี้เข้าไปเพื่อให้ส่งไฟล์ HTML หน้าแรกได้ถูกต้อง
 @app.route('/')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
 
-
-# ส่วนของ API และการคำนวณวงโคจรดาวเทียมด้านล่างปล่อยไว้เหมือนเดิมครับ...
-
-# 2. นำเข้าและเปิดระบบ Tracker
-try:
-    from satellite import SatelliteTracker
-    print("[System] Initializing SPU SATELLITE OPERATIONS CENTER...")
-    tracker = SatelliteTracker(config_path)
-    TRACKER_ONLINE = True
-except Exception as e:
-    print(f"[CRITICAL ERROR] Could not start SatelliteTracker: {e}")
-    TRACKER_ONLINE = False
-
-# 3. กำหนดหน้าเว็บ
-@app.route('/')
-def index():
-    return send_from_directory(frontend_dir, 'index.html')
-
+# 3. พิเศษ! เพิ่ม Route ตัวนี้เพื่อให้ Python ยอมส่งไฟล์ CSS และ JS ในโฟลเดอร์ frontend ออกไปหาเบราว์เซอร์
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory(frontend_dir, path)
+    return send_from_directory(app.static_folder, path)
+
+# ส่วนของ API /api/satellites ด้านล่างปล่อยไว้เหมือนเดิมได้เลยครับ...
 
 @app.route('/api/satellites')
 def get_satellites():
