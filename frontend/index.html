@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SPU SATELLITE OPERATIONS CENTER</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="main-container">
         <div class="left-panel">
-            <div class="panel-border">
+            <div class="panel-border canvas-container">
                 <canvas id="radarCanvas"></canvas>
             </div>
             <div class="panel-border frequency-display">
@@ -21,44 +21,48 @@
         <div class="right-panel">
             <div class="panel-border data-box">
                 <div class="panel-header-title">LIVE TELEMETRY</div>
-                <table class="soc-table">
-                    <thead>
-                        <tr>
-                            <th>SAT</th>
-                            <th>AZ</th>
-                            <th>EL</th>
-                            <th>RANGE</th>
-                            <th>DOPPLER RX</th>
-                            <th>STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="telemetryData">
-                        </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="soc-table">
+                        <thead>
+                            <tr>
+                                <th>SAT</th>
+                                <th>AZ</th>
+                                <th>EL</th>
+                                <th>RANGE</th>
+                                <th>DOPPLER</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="telemetryData">
+                            </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="panel-border data-box" style="margin-top: 15px;">
+            <div class="panel-border data-box">
                 <div class="panel-header-title">COMM FREQUENCY</div>
-                <table class="soc-table">
-                    <thead>
-                        <tr>
-                            <th>SAT</th>
-                            <th>AZ</th>
-                            <th>EL</th>
-                            <th>RANGE</th>
-                            <th>DOPPLER RX</th>
-                            <th>STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="commData">
-                        </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="soc-table">
+                        <thead>
+                            <tr>
+                                <th>SAT</th>
+                                <th>AZ</th>
+                                <th>EL</th>
+                                <th>RANGE</th>
+                                <th>DOPPLER</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commData">
+                            </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>© 2026 SPU Satellite Operations Center. All Rights Reserved. | SYSTEM DEV: E25YMZ</p>
+        <p>© 2026 SPU Satellite Operations Center. All Rights Reserved.<br>SYSTEM DEV: E25YMZ</p>
     </footer>
 
     <script src="script.js"></script>
