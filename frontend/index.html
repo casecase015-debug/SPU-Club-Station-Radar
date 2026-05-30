@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,47 +7,52 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="left-panel">
-            <header>
-                <h1>SPU SATELLITE OPERATIONS CENTER</h1>
-                <p class="status">SYSTEM ONLINE - TRACKING ACTIVE</p>
-            </header>
-            
-            <div class="radar-box">
-                <canvas id="radarCanvas" width="500" height="500"></canvas>
-                <div class="radar-label">POLAR TRACKING (AZ/EL)</div>
-            </div>
-
-            <div class="freq-box">
-                <h3>COMM FREQUENCIES (CENTER)</h3>
-                <div id="freqData"></div>
+    <div class="main-container">
+        <div class="radar-section">
+            <canvas id="radarCanvas"></canvas>
+            <div class="radar-footer-data">
+                <p>SO-50 U-Downlink: <span class="green-text">436.795 MHz</span></p>
+                <p>IO-86 U-Downlink: <span class="green-text">435.880 MHz</span></p>
             </div>
         </div>
 
-        <div class="right-panel">
-            <div class="clock-box">
-                <div id="liveClock">00:00:00 ICT</div>
-            </div>
+        <div class="data-section">
+            <div class="panel-title">LIVE TELEMETRY</div>
+            <table class="telemetry-table">
+                <thead>
+                    <tr>
+                        <th>SAT</th>
+                        <th>AZ</th>
+                        <th>EL</th>
+                        <th>RANGE</th>
+                        <th>DOPPLER RX</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="telemetryData">
+                    </tbody>
+            </table>
 
-            <div class="telemetry-box">
-                <h3>LIVE TELEMETRY & DOPPLER SHIFT</h3>
-                <div class="table-header">
-                    <span>SAT</span>
-                    <span>AZ</span>
-                    <span>EL</span>
-                    <span>RANGE</span>
-                    <span>DOPPLER RX</span>
-                    <span>STATUS</span>
-                </div>
-                <div id="telemetryData">
-                    </div>
-            </div>
+            <div class="panel-title" style="margin-top: 20px;">COMM FREQUENCY</div>
+            <table class="telemetry-table">
+                <thead>
+                    <tr>
+                        <th>SAT</th>
+                        <th>AZ</th>
+                        <th>EL</th>
+                        <th>RANGE</th>
+                        <th>DOPPLER RX</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="commData">
+                    </tbody>
+            </table>
         </div>
     </div>
 
     <footer>
-        <p>© 2026 SPU SATELLITE OPERATIONS CENTER. All Rights Reserved. | SYSTEM DEV: E25YMZ</p>
+        <p>© 2026 SPU Satellite Operations Center. All Rights Reserved. | SYSTEM DEV: E25YMZ</p>
     </footer>
 
     <script src="script.js"></script>
