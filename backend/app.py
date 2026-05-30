@@ -14,14 +14,11 @@ from flask import Flask, jsonify, send_from_directory
 # ชี้ไปที่โฟลเดอร์ frontend โดยตรง ไม่ต้องมีจุดถอยหลัง
 app = Flask(__name__, static_folder='frontend', static_url_path='')
 
+# ปล่อยให้มี @app.route('/') และ def index(): แค่ชุดเดียวในไฟล์นะครับ!
 @app.route('/')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
-    
-# 2. เพิ่ม Route ตัวนี้เข้าไป (กรณีที่ยังไม่มี) เพื่อส่งไฟล์ index.html ออกไปเมื่อเปิดหน้าเว็บแรก
-@app.route('/')
-def index():
-    return send_from_directory(app.static_folder, 'index.html')
+
 
 # ส่วนของ API และการคำนวณวงโคจรดาวเทียมด้านล่างปล่อยไว้เหมือนเดิมครับ...
 
