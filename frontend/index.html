@@ -8,52 +8,52 @@
 </head>
 <body>
     <div class="main-container">
-        <div class="radar-section">
-            <h1 class="main-title">SPU SATELLITE OPERATIONS CENTER</h1>
-            <p class="sub-status">SYSTEM ONLINE - TRACKING ACTIVE</p>
-            
-            <div class="canvas-wrapper">
+        <div class="left-panel">
+            <div class="panel-border">
                 <canvas id="radarCanvas"></canvas>
             </div>
-            
-            <div class="radar-footer-data">
-                <p>SO-50 U-Downlink: <span class="green-text">436.795 MHz</span></p>
-                <p>IO-86 U-Downlink: <span class="green-text">435.880 MHz</span></p>
+            <div class="panel-border frequency-display">
+                <p>SO-50 U-Downlink: <span class="highlight-text">436.795 MHz</span></p>
+                <p>IO-86 U-Downlink: <span class="highlight-text">435.880 MHz</span></p>
             </div>
         </div>
 
-        <div class="data-section">
-            <div class="panel-title">LIVE TELEMETRY</div>
-            <table class="telemetry-table">
-                <thead>
-                    <tr>
-                        <th>SAT</th>
-                        <th>AZ</th>
-                        <th>EL</th>
-                        <th>RANGE</th>
-                        <th>DOPPLER RX</th>
-                        <th>STATUS</th>
-                    </tr>
-                </thead>
-                <tbody id="telemetryData">
-                    </tbody>
-            </table>
+        <div class="right-panel">
+            <div class="panel-border data-box">
+                <div class="panel-header-title">LIVE TELEMETRY</div>
+                <table class="soc-table">
+                    <thead>
+                        <tr>
+                            <th>SAT</th>
+                            <th>AZ</th>
+                            <th>EL</th>
+                            <th>RANGE</th>
+                            <th>DOPPLER RX</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="telemetryData">
+                        </tbody>
+                </table>
+            </div>
 
-            <div class="panel-title" style="margin-top: 30px;">COMM FREQUENCY</div>
-            <table class="telemetry-table">
-                <thead>
-                    <tr>
-                        <th>SAT</th>
-                        <th>AZ</th>
-                        <th>EL</th>
-                        <th>RANGE</th>
-                        <th>DOPPLER RX</th>
-                        <th>STATUS</th>
-                    </tr>
-                </thead>
-                <tbody id="commData">
-                    </tbody>
-            </table>
+            <div class="panel-border data-box" style="margin-top: 15px;">
+                <div class="panel-header-title">COMM FREQUENCY</div>
+                <table class="soc-table">
+                    <thead>
+                        <tr>
+                            <th>SAT</th>
+                            <th>AZ</th>
+                            <th>EL</th>
+                            <th>RANGE</th>
+                            <th>DOPPLER RX</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commData">
+                        </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
