@@ -115,7 +115,7 @@
             text-shadow: 0 0 8px #ffff00;
         }
 
-        /* ------------------ ด้านล่าง: กล่องสถานะระบบ และ ลิขสิทธิ์ ------------------ */
+        /* ------------------ ด้านล่าง: กล่องสถานะระบบ ------------------ */
         .status-bar {
             width: 100%;
             max-width: 880px;
@@ -152,7 +152,7 @@
             
             <div class="data-row">
                 <span class="label">ID:</span>
-                <span class="value" id="val-name">WAITING...</span>
+                <span class="value" id="val-name">ISS (ZARYA)</span>
             </div>
             <div class="data-row">
                 <span class="label">CALLSIGN:</span>
@@ -193,7 +193,7 @@
     </div>
     
     <div class="status-bar" id="sys-status">
-        [SYS] INITIALIZING CORE SYSTEMS... ESTABLISHING UPLINK...
+        [SYS] INITIALIZING CORE SYSTEMS... STANDBY FOR DIRECT API UPLINK...
     </div>
 
     <div class="copyright-footer">
@@ -208,7 +208,11 @@
         const center = 250; 
         const maxRadius = 250; 
 
-        // วาดเส้นกริดเรดาร์
+        // พิกัด ม.ศรีปทุม (ฐานหลัก)
+        const SPU_LAT = 13.8580;
+        const SPU_LON = 100.5875;
+
+        // ฟังก์ชันวาดเส้นกริดเรดาร์
         function drawGrid() {
             ctx.clearRect(0, 0, 500, 500);
             ctx.strokeStyle = '#005500'; 
@@ -229,13 +233,13 @@
             ctx.beginPath(); ctx.arc(center, center, 3, 0, 2*Math.PI); ctx.fill();
         }
 
-        function drawTarget(target) {
+        function drawTarget(distance_km, bearing_deg) {
             drawGrid(); 
 
-            let r = (target.distance_km / 20000) * maxRadius;
+            let r = (distance_km / 20000) * maxRadius;
             if (r > maxRadius) r = maxRadius - 15; // ไม่ให้ทะลุขอบจอ
 
-            let angle = (target.bearing_deg - 90) * (Math.PI / 180);
+            let angle = (bearing_deg - 90) * (Math.PI / 180);
             let x = center + r * Math.cos(angle);
             let y = center + r * Math.sin(angle);
 
@@ -256,51 +260,91 @@
             ctx.shadowBlur = 0;
         }
 
+        // ==========================================
+        // ฟังก์ชันคำนวณคณิตศาสตร์ (ย้ายมาจาก Python)
+        // ==========================================
+        function toRad(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        function toDeg(radians) {
+            return radians * (180 / Math.PI);
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // รัศมีโลก กิโลเมตร
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            const phi1 = toRad(lat1);
+            const phi2 = toRad(lat2);
+            const lam1 = toRad(lon1);
+            const lam2 = toRad(lon2);
+
+            const y = Math.sin(lam2 - lam1) * Math.cos(phi2);
+            const x = Math.cos(phi1) * Math.sin(phi2) -
+                      Math.sin(phi1) * Math.cos(phi2) * Math.cos(lam2 - lam1);
+            
+            let theta = Math.atan2(y, x);
+            return (toDeg(theta) + 360) % 360;
+        }
+
+        // ==========================================
+        // ระบบดึงข้อมูลจาก API แบบตรงๆ (Frontend Fetch)
+        // ==========================================
+        async function fetchISSData() {
+            try {
+                // ใช้ API ที่รองรับ HTTPS เพื่อให้ทำงานบน GitHub Pages ได้
+                const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+                const data = await response.json();
+                
+                const issLat = data.latitude;
+                const issLon = data.longitude;
+                const velocity = data.velocity; // API นี้มีความเร็วให้ด้วย!
+
+                const distance = calculateDistance(SPU_LAT, SPU_LON, issLat, issLon);
+                const bearing = calculateBearing(SPU_LAT, SPU_LON, issLat, issLon);
+
+                sysStatus.innerHTML = "[SYS] UPLINK SECURE. RECEIVING DIRECT TELEMETRY...";
+
+                // อัปเดตข้อมูลพิกัดลงในแผงควบคุม
+                document.getElementById('val-lat').innerText = issLat.toFixed(4);
+                document.getElementById('val-lon').innerText = issLon.toFixed(4);
+                document.getElementById('val-dist').innerText = distance.toFixed(2) + " km";
+                document.getElementById('val-bear').innerText = bearing.toFixed(2) + "°";
+                document.getElementById('val-speed').innerText = velocity.toFixed(0) + " km/h";
+
+                // 2. ความแรงสัญญาณ (S-Meter): คำนวณจำลองจากระยะทาง
+                let sMeter = "S0";
+                if(distance < 3000) sMeter = "S9 + 20dB";
+                else if(distance < 6000) sMeter = "S9 + 10dB";
+                else if(distance < 10000) sMeter = "S9";
+                else if(distance < 15000) sMeter = "S7";
+                else sMeter = "S3";
+                document.getElementById('val-sig').innerText = sMeter;
+
+                // วาดลงเรดาร์
+                drawTarget(distance, bearing);
+
+            } catch (err) {
+                sysStatus.innerHTML = "<span style='color:red;'>[ERR] SATELLITE CONNECTION LOST. RETRYING...</span>";
+                console.error(err);
+            }
+        }
+
+        // วาดฉากหลังรอไว้ก่อน
         drawGrid();
 
-        // ==========================================
-        // ระบบรับข้อมูล (Server-Sent Events)
-        // ==========================================
-        const evtSource = new EventSource("/stream");
-        
-        evtSource.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            
-            if(data.error) {
-                sysStatus.innerHTML = "<span style='color:red;'>[ERR] DATA LINK FAILED: " + data.error + "</span>";
-                return;
-            }
-            
-            sysStatus.innerHTML = "[SYS] UPLINK STABLE. RECEIVING TELEMETRY FROM TARGET...";
-
-            // อัปเดตข้อมูลพิกัดลงในแผงควบคุม
-            document.getElementById('val-name').innerText = data.name;
-            document.getElementById('val-lat').innerText = data.lat.toFixed(4);
-            document.getElementById('val-lon').innerText = data.lon.toFixed(4);
-            document.getElementById('val-dist').innerText = data.distance_km.toFixed(2) + " km";
-            document.getElementById('val-bear').innerText = data.bearing_deg.toFixed(2) + "°";
-
-            // --- จำลองข้อมูลที่ API ไม่มีให้สมจริง ---
-            // 1. ความเร็ว: สถานีอวกาศบินที่ความเร็วประมาณ 27,500 - 27,600 km/h
-            let mockSpeed = 27500 + (Math.random() * 100);
-            document.getElementById('val-speed').innerText = mockSpeed.toFixed(0) + " km/h";
-
-            // 2. ความแรงสัญญาณ (S-Meter): คำนวณจำลองจากระยะทาง
-            let sMeter = "S0";
-            if(data.distance_km < 3000) sMeter = "S9 + 20dB";
-            else if(data.distance_km < 6000) sMeter = "S9 + 10dB";
-            else if(data.distance_km < 10000) sMeter = "S9";
-            else if(data.distance_km < 15000) sMeter = "S7";
-            else sMeter = "S3";
-            document.getElementById('val-sig').innerText = sMeter;
-
-            // วาดลงเรดาร์
-            drawTarget(data);
-        };
-
-        evtSource.onerror = function(err) {
-            sysStatus.innerHTML = "<span style='color:red;'>[SYS] CONNECTION LOST. ATTEMPTING TO RECONNECT...</span>";
-        };
+        // สั่งให้ดึงข้อมูลทุกๆ 2 วินาที
+        fetchISSData();
+        setInterval(fetchISSData, 2000);
     </script>
 </body>
 </html>
