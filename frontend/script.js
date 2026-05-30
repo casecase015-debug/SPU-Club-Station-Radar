@@ -3,45 +3,61 @@ const ctx = canvas.getContext('2d');
 const telemetryData = document.getElementById('telemetryData');
 const commData = document.getElementById('commData');
 
-canvas.width = 450;
-canvas.height = 450;
+// ล็อกขนาดเรดาร์ให้สมดุลกับดีไซน์เดิม
+canvas.width = 500;
+canvas.height = 500;
 
 const cx = canvas.width / 2;
 const cy = canvas.height / 2;
-const maxRadius = 200;
+const maxRadius = 220;
 let angle = 0;
 let satellites = [];
 
-function drawRadarBackground() {
-    ctx.strokeStyle = 'rgba(0, 255, 0, 0.2)';
+// วาดสเกลเรดาร์เชิงมุม (เส้นตรรกศาสตร์ 15° - 330°)
+function drawRadarGrid() {
+    ctx.strokeStyle = '#003300';
     ctx.lineWidth = 1;
-    for (let i = 1; i <= 3; i++) {
+    
+    // วาดวงรัศมีวงกลมเข้ม-จาง
+    for (let i = 1; i <= 4; i++) {
         ctx.beginPath();
-        ctx.arc(cx, cy, maxRadius * (i / 3), 0, Math.PI * 2);
+        ctx.arc(cx, cy, maxRadius * (i / 4), 0, Math.PI * 2);
         ctx.stroke();
     }
+    
+    // วาดเส้นรัศมีสแกนรอบทิศ (กากบาทและเส้นทะแยง)
     ctx.beginPath();
-    ctx.moveTo(cx - maxRadius, cy); ctx.lineTo(cx + maxRadius, cy);
-    ctx.moveTo(cx, cy - maxRadius); ctx.lineTo(cx, cy + maxRadius);
+    for (let d = 0; d < 360; d += 45) {
+        const rad = (d * Math.PI) / 180;
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + maxRadius * Math.cos(rad), cy + maxRadius * Math.sin(rad));
+    }
     ctx.stroke();
 }
 
-function drawSweep() {
+// ลำแสงหมุนสแกน (Sweep)
+function drawSweepBeam() {
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(angle);
-    let gradient = ctx.createLinearGradient(0, 0, maxRadius, 0);
-    gradient.addColorStop(0, 'rgba(0, 255, 0, 0.0)');
-    gradient.addColorStop(1, 'rgba(0, 255, 0, 0.3)');
-    ctx.fillStyle = gradient;
-    ctx.beginPath(); ctx.moveTo(0, 0);
+    
+    let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, maxRadius);
+    grad.addColorStop(0, 'rgba(0, 50, 0, 0)');
+    grad.addColorStop(1, 'rgba(0, 255, 0, 0.25)');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
     ctx.arc(0, 0, maxRadius, -Math.PI / 4, 0);
-    ctx.lineTo(0, 0); ctx.fill();
+    ctx.lineTo(0, 0);
+    ctx.fill();
     ctx.restore();
+    
     angle += 0.015;
 }
 
-function drawSatellites() {
+// วาดสัญลักษณ์ตัวดาวเทียมบนจอเรดาร์
+function drawSatelliteTargets() {
     satellites.forEach(sat => {
         if (sat.elevation > 0) {
             const r = maxRadius * ((90 - sat.elevation) / 90);
@@ -49,55 +65,67 @@ function drawSatellites() {
             const x = cx + r * Math.cos(theta);
             const y = cy + r * Math.sin(theta);
             
+            // วาดเป้าพิกัดเด่นชัด
             ctx.fillStyle = '#00ff00';
-            ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
-            ctx.font = '12px Courier New';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ff00';
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // ล้างเอฟเฟกต์แสงเงา
+            
+            // ป้ายชื่อกำกับข้างเป้าดาวเทียม
+            ctx.fillStyle = '#88ff88';
+            ctx.font = 'bold 12px Courier New';
             ctx.fillText(sat.name, x + 10, y + 4);
         }
     });
 }
 
-async function fetchTelemetry() {
+// ดึง Telemetry จาก Python API แปลงลงตาราง SOC ทั้งสอง
+async function syncSatelliteData() {
     try {
-        const response = await fetch('/api/satellites');
-        satellites = await response.json();
+        const res = await fetch('/api/satellites');
+        satellites = await res.json();
         
-        telemetryData.innerHTML = '';
-        commData.innerHTML = '';
+        let htmlRows = '';
         
         satellites.forEach(sat => {
-            const isVisible = sat.elevation > 0;
-            const statusText = isVisible ? 'IN_PASS' : 'BELOW_HORIZON';
-            const statusClass = isVisible ? 'alert' : 'danger';
+            const isAOS = sat.elevation > 0;
+            const statusText = isAOS ? 'IN_PASS' : 'BELOW_HORIZON';
+            const statusClass = isAOS ? 'alert' : 'danger';
             
-            const rowContent = `
-                <td><strong>${sat.name}</strong></td>
-                <td>${sat.azimuth.toFixed(1)}°</td>
-                <td>${sat.elevation.toFixed(1)}°</td>
-                <td>${Math.round(sat.range_km)}km</td>
-                <td>${sat.doppler_khz.toFixed(2)}kHz</td>
-                <td class="${statusClass}">${statusText}</td>
+            htmlRows += `
+                <tr>
+                    <td><strong>${sat.name}</strong></td>
+                    <td>${sat.azimuth.toFixed(1)}°</td>
+                    <td>${sat.elevation.toFixed(1)}°</td>
+                    <td>${Math.round(sat.range_km)}km</td>
+                    <td>${sat.doppler_khz >= 0 ? '+' : ''}${sat.doppler_khz.toFixed(1)}kHz</td>
+                    <td class="${statusClass}">${statusText}</td>
+                </tr>
             `;
-            
-            const row1 = document.createElement('tr'); row1.innerHTML = rowContent;
-            telemetryData.appendChild(row1);
-            
-            const row2 = document.createElement('tr'); row2.innerHTML = rowContent;
-            commData.appendChild(row2);
         });
-    } catch (error) {
-        console.error("Error fetching telemetry:", error);
+        
+        // หยอดข้อมูลลงตารางพร้อมกันทั้งบนและล่างให้ตรงกับดีไซน์รูปดั้งเดิม
+        telemetryData.innerHTML = htmlRows;
+        commData.innerHTML = htmlRows;
+        
+    } catch (err) {
+        console.error("SOC Sync Error:", err);
     }
 }
 
-function animate() {
+// ลูปกราฟิกแอนิเมชันเรดาร์
+function renderSOC() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawRadarBackground();
-    drawSweep();
-    drawSatellites();
-    requestAnimationFrame(animate);
+    drawRadarGrid();
+    drawSweepBeam();
+    drawSatelliteTargets();
+    requestAnimationFrame(renderSOC);
 }
 
-animate();
-setInterval(fetchTelemetry, 1000);
-fetchTelemetry();
+// เริ่มต้นระบบปฏิบัติการหน้าจอ
+renderSOC();
+setInterval(syncSatelliteData, 1000); // อัปเดตข้อมูลพิกัดสดๆ ทุก 1 วินาที
+syncSatelliteData();
