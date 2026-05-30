@@ -8,7 +8,18 @@ frontend_dir = os.path.join(project_dir, 'frontend')
 data_dir = os.path.join(project_dir, 'data')
 config_path = os.path.join(data_dir, 'satellites.json')
 
-app = Flask(__name__, static_folder=frontend_dir, static_url_path='')
+import os
+from flask import Flask, jsonify, send_from_directory
+
+# 1. แก้ไขบรรทัดนี้: บอกให้ Flask รู้ว่าโฟลเดอร์หน้าเว็บอยู่ที่ไหน
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
+
+# 2. เพิ่ม Route ตัวนี้เข้าไป (กรณีที่ยังไม่มี) เพื่อส่งไฟล์ index.html ออกไปเมื่อเปิดหน้าเว็บแรก
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+# ส่วนของ API และการคำนวณวงโคจรดาวเทียมด้านล่างปล่อยไว้เหมือนเดิมครับ...
 
 # 2. นำเข้าและเปิดระบบ Tracker
 try:
