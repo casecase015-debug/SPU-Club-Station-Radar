@@ -1,0 +1,17 @@
+{
+  "spu_ground_station": {
+    "name": "SPU SATELLITE OPERATIONS CENTER",
+    "latitude": 13.8580,
+    "longitude": 100.5875,
+    "elevation_m": 15
+  },
+  "targets": [
+    { "name": "ISS (ZARYA)", "norad_id": 25544, "type": "Space Station" },
+    { "name": "AO-7", "norad_id": 7530, "type": "Amateur" },
+    { "name": "SO-50", "norad_id": 27607, "type": "Amateur" },
+    { "name": "RS-44", "norad_id": 44885, "type": "Amateur" },
+    { "name": "PO-101", "norad_id": 43678, "type": "Amateur" },
+    { "name": "QO-100", "norad_id": 43700, "type": "Geostationary" },
+    { "name": "XW-2A", "norad_id": 40903, "type": "Amateur" }
+  ]
+}

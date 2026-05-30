@@ -1,0 +1,172 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+body {
+    background-color: #010b01;
+    color: #00ff00;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    border-bottom: 2px solid #00ff00;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    text-shadow: 0 0 5px #00ff00;
+}
+
+.status {
+    font-size: 0.9rem;
+    animation: blink 2s infinite;
+    margin-top: 5px;
+}
+
+.clock {
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: 1px solid #00ff00;
+    padding: 5px 10px;
+    background-color: rgba(0, 255, 0, 0.1);
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    flex: 1;
+}
+
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.radar-container {
+    position: relative;
+    border: 2px solid #00ff00;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+    width: 504px;
+    height: 504px;
+    background-color: #010b01;
+}
+
+.radar-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 0.8rem;
+    color: rgba(0, 255, 0, 0.7);
+}
+
+/* สไตล์สำหรับกล่องความถี่ ISS */
+.comms-container {
+    border: 2px solid #00ff00;
+    padding: 15px;
+    background-color: rgba(0, 255, 0, 0.05);
+    width: 504px;
+}
+
+.comms-container h2 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #00ff00;
+    padding-bottom: 5px;
+    color: #ffff00;
+}
+
+.freq-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.freq-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.freq-label {
+    color: rgba(0, 255, 0, 0.8);
+}
+
+.freq-value {
+    color: #00ff00;
+    text-shadow: 0 0 3px #00ff00;
+}
+
+.telemetry-container {
+    flex: 1;
+    min-width: 400px;
+    border: 2px solid #00ff00;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.telemetry-container h2 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed #00ff00;
+    padding-bottom: 5px;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr 1fr;
+    font-weight: bold;
+    border-bottom: 1px solid #00ff00;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.telemetry-data {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sat-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr 1fr;
+    padding: 8px 0;
+    border-bottom: 1px dotted rgba(0, 255, 0, 0.3);
+}
+
+.sat-row.alert { color: #ffff00; }
+.sat-row.danger { color: #ff0000; }
+
+.loading {
+    text-align: center;
+    margin-top: 20px;
+    font-style: italic;
+    color: rgba(0, 255, 0, 0.5);
+}
+
+.footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8rem;
+    border-top: 1px solid #00ff00;
+    color: rgba(0, 255, 0, 0.6);
+    background-color: #010b01;
+}
