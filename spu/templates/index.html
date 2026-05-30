@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPU Club Station Radar</title>
+    <style>
+        /* ตั้งค่าโทนสีหน้าจอเรดาร์ (ดำ-เขียว) */
+        body {
+            background-color: #051005; 
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+        h2 { text-shadow: 0 0 10px #00ff00; }
+        
+        /* กรอบจอเรดาร์วงกลม */
+        .radar-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background-color: #001a00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2), inset 0 0 50px rgba(0, 255, 0, 0.1);
+            overflow: hidden;
+            border: 2px solid #004400;
+        }
+        
+        /* เลเยอร์วาดเส้นกริดและเป้าหมาย */
+        #radar-ui {
+            position: absolute;
+            z-index: 2;
+        }
+        
+        /* เลเยอร์แอนิเมชันเส้นสแกนเรดาร์ */
+        #radar-sweep {
+            position: absolute;
+            z-index: 3;
+            background: conic-gradient(from 0deg, rgba(0,255,0,0) 70%, rgba(0,255,0,0.1) 95%, rgba(0,255,0,0.8) 100%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* กล่องแสดงข้อมูลด้านล่าง */
+        .info-panel {
+            margin-top: 25px;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            width: 470px;
+            background-color: rgba(0, 50, 0, 0.5);
+            box-shadow: 0 0 10px #00ff00;
+            line-height: 1.5;
+        }
+        .info-panel span { font-weight: bold; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <h2>SPU AMATEUR RADIO - ORBITAL RADAR</h2>
+    
+    <div class="radar-container">
+        <canvas id="radar-ui" width="500" height="500"></canvas>
+        <div id="radar-sweep"></div>
+    </div>
+    
+    <div class="info-panel" id="info">
+        [ SYSTEM INITIALIZING... ESTABLISHING CONNECTION ]
+    </div>
+
+    <script>
+        const uiCanvas = document.getElementById('radar-ui');
+        const ctx = uiCanvas.getContext('2d');
+        const infoPanel = document.getElementById('info');
+        
+        const center = 250; 
+        const maxRadius = 250; 
+
+        // ฟังก์ชันวาดเส้นกริดเรดาร์
+        function drawGrid() {
+            ctx.clearRect(0, 0, 500, 500);
+            ctx.strokeStyle = '#005500'; 
+            ctx.lineWidth = 1;
+
+            // วาดวงกลมบอกระยะ 4 ชั้น
+            for(let i=1; i<=4; i++) {
+                ctx.beginPath();
+                ctx.arc(center, center, (maxRadius/4)*i, 0, 2*Math.PI);
+                ctx.stroke();
+            }
+            // วาดเส้นแกน X, Y
+            ctx.beginPath(); ctx.moveTo(center, 0); ctx.lineTo(center, 500); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, center); ctx.lineTo(500, center); ctx.stroke();
+        }
+
+        // ฟังก์ชันพล็อตจุดเป้าหมายบนจอ
+        function drawTarget(target) {
+            drawGrid(); // วาดกริดทับของเก่าเพื่อรีเฟรชจอ
+
+            // แปลงสเกลระยะทาง (สมมติระยะขอบจอคือ 20,000 กม.)
+            let r = (target.distance_km / 20000) * maxRadius;
+            if (r > maxRadius) r = maxRadius - 10; 
+
+            // แปลงองศา (Bearing) เป็นเรเดียน และปรับให้ 0 องศาอยู่ด้านบน
+            let angle = (target.bearing_deg - 90) * (Math.PI / 180);
+
+            // คำนวณพิกัดแกน X, Y
+            let x = center + r * Math.cos(angle);
+            let y = center + r * Math.sin(angle);
+
+            // พล็อตจุดสีเหลืองเรืองแสง
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, 2*Math.PI);
+            ctx.fill();
+            
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "yellow";
+            
+            // พิมพ์ชื่อเป้าหมายกำกับไว้ข้างๆ จุด
+            ctx.fillStyle = '#ffffff';
+            ctx.font = "12px Courier New";
+            ctx.fillText(target.name, x + 10, y + 4);
+            
+            ctx.shadowBlur = 0;
+        }
+
+        // วาดหน้าปัดรอไว้ก่อนระหว่างเชื่อมต่อข้อมูล
+        drawGrid();
+
+        // ==========================================
+        // ระบบรับข้อมูลแบบ Real-time (Server-Sent Events)
+        // ==========================================
+        const evtSource = new EventSource("/stream");
+        
+        // ทำงานเมื่อมีข้อมูลใหม่ส่งมาจาก Python
+        evtSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if(data.error) {
+                infoPanel.innerHTML = "API ERROR: " + data.error;
+                return;
+            }
+            
+            // อัปเดตข้อมูลตัวหนังสือในกล่องด้านล่าง
+            infoPanel.innerHTML = `
+                TARGET ID: <span>${data.name}</span><br>
+                COORDINATES: <span>LAT ${data.lat.toFixed(4)} / LON ${data.lon.toFixed(4)}</span><br>
+                BEARING (AZ): <span>${data.bearing_deg.toFixed(2)}&deg;</span><br>
+                DISTANCE: <span>${data.distance_km.toFixed(2)} km</span>
+            `;
+            
+            // ส่งข้อมูลไปพล็อตจุดบนเรดาร์
+            drawTarget(data);
+        };
+
+        // ทำงานเมื่อการเชื่อมต่อมีปัญหา
+        evtSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+            infoPanel.innerHTML = "<span style='color:red;'>[ CONNECTION LOST - RECONNECTING... ]</span>";
+        };
+    </script>
+</body>
+</html>
